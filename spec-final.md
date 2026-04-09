@@ -1,0 +1,38 @@
+**Nhóm:** ___
+**Track:** ☐ VinFast · ☑ Vinmec · ☐ VinUni-VinSchool · ☐ XanhSM · ☐ Open
+
+**Problem statement (1 câu):** 
+*Bệnh nhân thường gặp khó khăn khi hiểu kết quả khám, đặt lịch tái khám và chuẩn bị trước khi đến bệnh viện; AI giúp giải thích thông tin y khoa, nhắc lịch và hướng dẫn bệnh nhân rõ ràng hơn.*
+
+---
+
+# 1. AI Product Canvas *(Nguyễn Tuấn Kiệt - 2A202600232)*
+
+|             | Value                                                                                                                                                | Trust                                                                                                                           | Feasibility                                                                        |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **Câu hỏi** | User nào? Pain gì? AI giải gì?                                                                                                                       | Khi AI sai thì sao? User sửa bằng cách nào?                                                                                     | Cost/latency bao nhiêu? Risk chính?                                                |
+| **Trả lời** | *Bệnh nhân. Pain: Không hiểu kết quả khám, quên lịch tái khám, không biết chuẩn bị gì. AI: Giải thích kết quả, nhắc lịch, hướng dẫn trước khi khám.* | *AI sai → Bệnh nhân xem nguồn từ tài liệu chính thức của Vinmec hoặc hỏi lại bác sĩ. Có cảnh báo "AI chỉ mang tính tham khảo".* | *~$0.02/user, latency < 3s. Risk: Giải thích sai thông tin y khoa, gây hiểu nhầm.* |
+
+**Automation hay augmentation?**
+☐ Automation · ☑ Augmentation
+
+**Justify:**
+*AI hỗ trợ bệnh nhân hiểu thông tin, nhưng quyết định y khoa vẫn thuộc về bác sĩ.*
+
+---
+
+### Learning signal
+
+**1. User correction đi vào đâu?**
+___ Feedback của bệnh nhân lưu vào database để cải thiện model giải thích.
+
+**2. Product thu signal gì để biết tốt lên hay tệ đi?**
+___ Tỷ lệ bệnh nhân đọc xong hiểu (thumb up/down), số lần hỏi lại cùng một câu hỏi.
+
+**3. Data thuộc loại nào?**
+☐ User-specific · ☑ Domain-specific · ☑ Human-judgment · ☐ Real-time · ☐ Khác: ___
+
+**Có marginal value không?**
+___ Có. Feedback từ bệnh nhân giúp AI hiểu cách diễn đạt dễ hiểu hơn với người không chuyên.
+
+---
