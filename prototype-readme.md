@@ -8,7 +8,7 @@ Chatbot tư vấn bệnh nhân, trả lời giải đáp các thông số y khoa
 - 1 demo chính chạy thật với OpenAI API: nhập thông tin/yêu cầu -> tư vấn/đặt lịch/giải đáp
 
 ## Links
-- Prototype:
+- Prototype: https://github.com/Wandseven/Nhom13-402-Day06
 - Video demo (backup): https://drive.google.com/file/d/1aJbyE7A1mWFVYHVGiz8SexhHunW-jqAR/view?usp=drive_link
 
 ## Tools
@@ -19,9 +19,9 @@ Chatbot tư vấn bệnh nhân, trả lời giải đáp các thông số y khoa
 ## Phân công
 | Thành viên | Phần | Output |
 |-----------|------|--------|
-| Nguyễn Tuấn Kiệt | AI Canvas + Sketch | spec-final.md phần 1 |
-| Mã Khoa Học  | User stories 4 paths 2 feature + slide | spec-final.md phần 2, demo_slides.pdf |
-| Nguyễn Hữu Nam | User stories 4 paths 1 feature | spec-final.md phần 2 |
-| Nguyễn Việt Trung | ROI 3 kịch bản + mock prototype | spec-final.md phần 5 |
-| Trần Ngô Hồng Hà | failure modes + Mini AI spec | spec-final.md phần 4 + 6 |
-| Hà Việt Khánh | Eval metrics + threshold | spec-final.md phần 3 |
+| Nguyễn Tuấn Kiệt | AI Canvas + Sketch + tools | spec-final.md phần 1, app/agent/tools |
+| Mã Khoa Học  | User stories 4 paths 2 feature + slide + workflow design + testing | spec-final.md phần 2, demo_slides.pdf |
+| Nguyễn Hữu Nam | User stories 4 paths 1 feature + agent logic | spec-final.md phần 2, app/agent |
+| Nguyễn Việt Trung | ROI 3 kịch bản + mock prototype + frontend | spec-final.md phần 5, static, mock_v4.html |
+| Trần Ngô Hồng Hà | failure modes + Mini AI spec + API + service | spec-final.md phần 4 + 6, app/api, services |
+| Hà Việt Khánh | Eval metrics + threshold + database | spec-final.md phần 3, app/db, model, schema |
