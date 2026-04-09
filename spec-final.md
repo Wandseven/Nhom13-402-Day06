@@ -36,3 +36,20 @@ ___ Tỷ lệ bệnh nhân đọc xong hiểu (thumb up/down), số lần hỏi 
 ___ Có. Feedback từ bệnh nhân giúp AI hiểu cách diễn đạt dễ hiểu hơn với người không chuyên.
 
 ---
+
+
+# 3. Eval metrics + threshold *(Hà Việt Khánh - 2A202600055)*
+
+**Optimize precision hay recall?**
+☑ Precision · ☐ Recall
+
+**Tại sao?**
+*Trong y tế, thông tin sai có thể gây hoang mang cho bệnh nhân.*
+
+| Metric                       | Threshold | Red flag (dừng khi) |
+| ---------------------------- | --------- | ------------------- |
+| *Accuracy (giải thích đúng)* | *≥90%*    | *< 80%*             |
+| *User satisfaction*          | *≥80%*    | *< 60%*             |
+| *Latency*                    | *< 3s*    | *> 8s*              |
+
+---
