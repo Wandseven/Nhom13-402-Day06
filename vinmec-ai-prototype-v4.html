@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Vinmec AI Patient Assistant v4 — Prototype</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,'Segoe UI',sans-serif;background:#e8eded;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:32px 16px 56px;}
+.top-label{font-size:13px;color:#555;margin-bottom:16px;font-weight:500;}
+.top-label span{color:#009B8D;font-weight:700;}
+.phone{width:375px;height:780px;background:#f5f5f5;border-radius:42px;overflow:hidden;border:7px solid #1a1a1a;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.25),0 0 0 1px #333;}
+.phone::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:28px;background:#1a1a1a;border-radius:0 0 18px 18px;z-index:999;}
+.screen{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:none;flex-direction:column;background:#f5f5f5;}
+.screen.active{display:flex;}
+
+.hdr{background:linear-gradient(135deg,#009B8D,#00b5a4);padding:48px 16px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.hdr-back{cursor:pointer;padding:4px;}
+.badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.2);border-radius:20px;padding:3px 10px;font-size:10px;color:#fff;margin-bottom:2px;}
+.hdr-sub{font-size:11px;opacity:.85;color:#fff;}
+
+.chat-body{flex:1;padding:10px 14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;background:#f5f5f5;}
+.msg-row{display:flex;gap:8px;align-items:flex-end;}
+.msg-row.user{flex-direction:row-reverse;}
+.av{width:28px;height:28px;border-radius:50%;background:#009B8D;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;color:#fff;font-weight:700;}
+.av.u{background:#E6F7F5;color:#009B8D;}
+.bub{max-width:82%;padding:9px 12px;border-radius:16px;font-size:13px;line-height:1.5;color:#111;}
+.bub.ai{background:#fff;border-bottom-left-radius:4px;}
+.bub.user{background:#009B8D;color:#fff;border-bottom-right-radius:4px;}
+
+.warn-card{background:#fff4dd;border-radius:14px;padding:12px;border-left:4px solid #d4a017;margin-top:4px;}
+.ok-card{background:#d4edda;border-radius:14px;padding:12px;border-left:4px solid #28a745;margin-top:4px;}
+.refuse-card{background:#ffcccc;border-radius:14px;padding:12px;border-left:4px solid #cc0000;margin-top:4px;}
+.addr-card{background:#E6F7F5;border-radius:14px;padding:12px;margin-top:4px;}
+.clinic-card{background:#fff;border-radius:12px;padding:11px 13px;display:flex;gap:10px;align-items:flex-start;margin:5px 0;border:1.5px solid transparent;cursor:pointer;}
+.clinic-card:hover,.clinic-card.chosen{border-color:#009B8D;background:#f0fcfb;}
+.clinic-icon{width:38px;height:38px;border-radius:10px;background:#E6F7F5;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+
+.src-chip{display:inline-flex;align-items:center;gap:5px;background:#E6F7F5;border-radius:20px;padding:4px 10px;font-size:11px;color:#009B8D;margin-top:5px;border:.5px solid rgba(0,155,141,.3);}
+
+.ibar{background:#fff;padding:9px 11px;display:flex;gap:8px;align-items:center;border-top:.5px solid #e0e0e0;flex-shrink:0;}
+.ifield{flex:1;background:#f5f5f5;border:none;border-radius:22px;padding:9px 13px;font-size:13px;outline:none;color:#111;font-family:inherit;}
+.ibtn{width:36px;height:36px;border-radius:50%;background:#009B8D;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;flex-shrink:0;}
+
+.chips{display:flex;gap:7px;overflow-x:auto;padding:8px 14px;flex-shrink:0;scrollbar-width:none;}
+.chips::-webkit-scrollbar{display:none;}
+.chip{white-space:nowrap;background:#fff;border:.5px solid rgba(0,155,141,.55);border-radius:20px;padding:6px 12px;font-size:12px;color:#009B8D;cursor:pointer;flex-shrink:0;font-family:inherit;}
+.chip.warn{border-color:#d4a017;color:#7d5f00;background:#fffbf0;}
+.chip.err{border-color:#cc0000;color:#800000;background:#fff5f5;}
+
+.tdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#aaa;animation:bl 1.2s ease-in-out infinite;}
+.tdot:nth-child(2){animation-delay:.2s;}.tdot:nth-child(3){animation-delay:.4s;}
+@keyframes bl{0%,80%,100%{opacity:.2;}40%{opacity:1;}}
+@keyframes prog{to{width:100%}}
+
+.action-row{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap;}
+.abtn{padding:8px 14px;border-radius:10px;font-size:12px;cursor:pointer;border:.5px solid #e0e0e0;background:#fff;color:#555;font-family:inherit;font-weight:600;}
+.abtn.yes{background:#d4edda;border-color:#28a745;color:#155724;}
+.abtn.no{background:#ffcccc;border-color:#cc0000;color:#800000;}
+.abtn.cont{background:#E6F7F5;border-color:#009B8D;color:#009B8D;}
+
+.step-list{background:#fff;border-radius:14px;padding:12px;margin-top:4px;}
+.step-row{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:.5px solid #f0f0f0;}
+.step-row:last-child{border-bottom:none;}
+.step-num{width:22px;height:22px;border-radius:50%;background:#009B8D;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-txt{font-size:12px;color:#333;line-height:1.5;}
+
+.conf-bar{height:6px;border-radius:3px;margin:5px 0;}
+.conf-h{background:linear-gradient(90deg,#28a745,#5cb85c);width:85%;}
+.conf-l{background:linear-gradient(90deg,#ffc107,#ff9800);width:35%;}
+
+.loop-badge{display:inline-flex;align-items:center;gap:4px;background:#E6F7F5;border-radius:10px;padding:4px 10px;font-size:10px;color:#009B8D;border:.5px solid rgba(0,155,141,.3);margin-bottom:6px;}
+
+/* BOOK STEP BAR */
+.sdot-b{width:9px;height:9px;border-radius:50%;background:#ddd;transition:background .3s;}
+.sdot-b.cur{background:#009B8D;box-shadow:0 0 0 3px rgba(0,155,141,.25);}
+.sdot-b.done{background:#009B8D;}
+.slab-b{font-size:9px;color:#aaa;white-space:nowrap;}
+.slab-b.a{color:#009B8D;font-weight:600;}
+.sl-b{flex:1;height:2px;background:#ddd;margin-bottom:13px;transition:background .3s;}
+.sl-b.done{background:#009B8D;}
+
+.end-hero{background:linear-gradient(135deg,#009B8D,#00b5a4);padding:48px 20px 24px;text-align:center;flex-shrink:0;}
+
+#toast{display:none;position:absolute;top:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.82);color:#fff;padding:7px 16px;border-radius:20px;font-size:12px;z-index:200;white-space:nowrap;}
+
+/* BOTTOM NAV */
+.bottom-nav{display:flex;gap:7px;margin-top:20px;flex-wrap:wrap;justify-content:center;}
+.npill{padding:6px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-weight:600;border:none;font-family:inherit;}
+.np-main{background:#009B8D;color:#fff;}
+.np-info{background:#E6F7F5;color:#009B8D;border:1px solid #009B8D;}
+.np-book{background:#d4edda;color:#155724;border:1px solid #28a745;}
+.np-proc{background:#E6F7F5;color:#009B8D;border:1px solid #009B8D;}
+.hint{font-size:11px;color:#666;margin-top:8px;text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="top-label"><span>Vinmec AI Patient Assistant</span> · Prototype v4 · Hackathon</div>
+
+<div class="phone">
+
+<!-- ===== HOME ===== -->
+<div class="screen active" id="s-home">
+  <div class="hdr" style="flex-direction:column;align-items:flex-start;">
+    <div style="display:flex;justify-content:space-between;width:100%;margin-bottom:10px;">
+      <div><div style="font-size:20px;font-weight:800;color:#fff;">MyVinmec AI</div>
+      <div style="font-size:11px;opacity:.8;color:#fff;">Trợ lý y tế · Chỉ mang tính tham khảo</div></div>
+      <div style="background:rgba(255,255,255,.2);border-radius:20px;padding:5px 12px;font-size:11px;color:#fff;align-self:flex-start;margin-top:4px;">
+        <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#4fffaa;margin-right:4px;vertical-align:middle;"></span>Online
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;width:100%;">
+      <div onclick="go('s-info');initInfo()" style="flex:1;background:rgba(255,255,255,.15);border-radius:10px;padding:8px;text-align:center;cursor:pointer;"><div style="font-size:16px;">🔬</div><div style="font-size:10px;color:#fff;margin-top:2px;font-weight:600;">Tư vấn<br>thông tin</div></div>
+      <div onclick="go('s-book');initBook()" style="flex:1;background:rgba(255,255,255,.15);border-radius:10px;padding:8px;text-align:center;cursor:pointer;"><div style="font-size:16px;">📅</div><div style="font-size:10px;color:#fff;margin-top:2px;font-weight:600;">Đặt lịch<br>khám</div></div>
+      <div onclick="go('s-proc');initProc()" style="flex:1;background:rgba(255,255,255,.15);border-radius:10px;padding:8px;text-align:center;cursor:pointer;"><div style="font-size:16px;">📋</div><div style="font-size:10px;color:#fff;margin-top:2px;font-weight:600;">Tư vấn<br>quy trình</div></div>
+    </div>
+  </div>
+  <div class="chips">
+    <div class="chip" onclick="routeHome('Glucose 6.8 có cao không?')">🔬 Tư vấn XN (Confident)</div>
+    <div class="chip warn" onclick="routeHome('Tôi bị chóng mặt dữ dội')">⚠️ Low-confidence</div>
+    <div class="chip" onclick="routeHome('Tôi bị đau ngực nên khám đâu?')">📅 Đặt lịch</div>
+    <div class="chip" onclick="routeHome('Quy trình nhập viện Vinmec')">📋 Quy trình</div>
+    <div class="chip err" onclick="routeHome('Hướng dẫn nấu phở ngon')">⛔ Ngoài domain</div>
+  </div>
+  <div class="chat-body" id="home-body">
+    <div class="msg-row"><div class="av">AI</div>
+      <div><div class="bub ai">Xin chào! Tôi là trợ lý AI Vinmec 👋<br><br>Tôi hỗ trợ 3 luồng chính:<br>🔬 Tư vấn thông tin y khoa<br>📅 Hỗ trợ đặt lịch khám<br>📋 Tư vấn quy trình Vinmec<br><br>Bạn cần hỗ trợ gì?</div></div>
+    </div>
+  </div>
+  <div class="ibar">
+    <input class="ifield" id="home-inp" placeholder="Nhập câu hỏi..."/>
+    <button class="ibtn" onclick="homeChat()"><svg width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
+  </div>
+</div>
+
+<!-- ===== NHÁNH 1: TƯ VẤN THÔNG TIN ===== -->
+<div class="screen" id="s-info">
+  <div class="hdr">
+    <div class="hdr-back" onclick="go('s-home')"><svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></div>
+    <div><div class="badge">🔬 Nhánh 1 · Tư vấn thông tin</div>
+    <div class="hdr-sub">Domain Check → RAG → Confidence → Vòng lặp hài lòng</div></div>
+  </div>
+  <div class="chips">
+    <div class="chip" onclick="infoAsk('Glucose 6.8 mmol/L của tôi có cao không?')">Giải thích kết quả máu</div>
+    <div class="chip warn" onclick="infoAsk('Tôi đau đầu dữ dội, nguyên nhân là gì?')">⚠️ Low-confidence</div>
+    <div class="chip err" onclick="infoAsk('Làm thế nào để nấu phở ngon?')">⛔ Ngoài domain</div>
+  </div>
+  <div class="chat-body" id="info-body"></div>
+  <div class="ibar">
+    <input class="ifield" id="info-inp" placeholder="Nhập câu hỏi y khoa..."/>
+    <button class="ibtn" onclick="infoAsk()"><svg width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
+  </div>
+</div>
+
+<!-- ===== NHÁNH 2: ĐẶT LỊCH ===== -->
+<div class="screen" id="s-book">
+  <div class="hdr">
+    <div class="hdr-back" onclick="go('s-home')"><svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></div>
+    <div><div class="badge">📅 Nhánh 2 · Hỗ trợ đặt lịch</div>
+    <div class="hdr-sub">Triệu chứng → Địa chỉ → Phòng khám → Xác nhận → Đặt lịch</div></div>
+  </div>
+  <div style="padding:10px 16px 4px;background:#f5f5f5;flex-shrink:0;">
+    <div style="display:flex;align-items:center;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;"><div class="sdot-b cur" id="b1"></div><div class="slab-b a" id="bl1">Triệu chứng</div></div>
+      <div class="sl-b" id="bln1"></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;"><div class="sdot-b" id="b2"></div><div class="slab-b" id="bl2">Địa chỉ</div></div>
+      <div class="sl-b" id="bln2"></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;"><div class="sdot-b" id="b3"></div><div class="slab-b" id="bl3">Phòng khám</div></div>
+      <div class="sl-b" id="bln3"></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;"><div class="sdot-b" id="b4"></div><div class="slab-b" id="bl4">Xác nhận</div></div>
+      <div class="sl-b" id="bln4"></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;"><div class="sdot-b" id="b5"></div><div class="slab-b" id="bl5">Đặt lịch</div></div>
+    </div>
+  </div>
+  <div class="chat-body" id="book-body"></div>
+  <div class="ibar" id="book-ibar" style="display:none;">
+    <input class="ifield" id="book-inp" placeholder=""/>
+    <button class="ibtn" id="book-ibtn"><svg width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
+  </div>
+</div>
+
+<!-- ===== NHÁNH 3: QUY TRÌNH ===== -->
+<div class="screen" id="s-proc">
+  <div class="hdr">
+    <div class="hdr-back" onclick="go('s-home')"><svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></div>
+    <div><div class="badge">📋 Nhánh 3 · Tư vấn quy trình</div>
+    <div class="hdr-sub">5.1 Truy xuất DB Vinmec → 5.2 Hướng dẫn cụ thể</div></div>
+  </div>
+  <div class="chat-body" id="proc-body"></div>
+  <div class="ibar">
+    <input class="ifield" id="proc-inp" placeholder="Hỏi về quy trình, viện phí..."/>
+    <button class="ibtn" onclick="procAsk()"><svg width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
+  </div>
+</div>
+
+<!-- ===== END ===== -->
+<div class="screen" id="s-end">
+  <div class="end-hero">
+    <div style="font-size:44px;margin-bottom:8px;" id="end-icon">✅</div>
+    <div style="font-size:18px;font-weight:700;color:#fff;">Kết thúc phiên hỗ trợ</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.8);margin-top:4px;" id="end-sub">Cảm ơn bạn đã sử dụng Vinmec AI</div>
+  </div>
+  <div style="padding:14px;display:flex;flex-direction:column;gap:10px;">
+    <div style="background:#fff;border-radius:14px;padding:14px;" id="end-content"></div>
+    <button onclick="go('s-home')" style="padding:13px;border-radius:12px;background:#009B8D;color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit;">← Về trang chủ</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+</div>
+
+<div class="bottom-nav">
+  <button class="npill np-main" onclick="go('s-home')">🏠 Home</button>
+  <button class="npill np-info" onclick="go('s-info');initInfo()">🔬 Tư vấn thông tin</button>
+  <button class="npill np-book" onclick="go('s-book');initBook()">📅 Đặt lịch</button>
+  <button class="npill np-proc" onclick="go('s-proc');initProc()">📋 Quy trình</button>
+</div>
+<div class="hint">Nhấn nút hoặc nhập câu hỏi trong Home để AI tự phân loại · Thử chip ⚠️ Low-confidence và ⛔ Ngoài domain</div>
+
+<script>
+/* ─── UTILS ─── */
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');document.getElementById(id).scrollTop=0;}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2000);}
+function scrollBot(id){const b=document.getElementById(id);if(b)b.scrollTop=b.scrollHeight;}
+function addMsg(bodyId,who,html){
+  const b=document.getElementById(bodyId);if(!b)return;
+  const r=document.createElement('div');r.className='msg-row'+(who==='user'?' user':'');
+  r.innerHTML=who==='user'?'<div class="av u">BN</div><div class="bub user">'+html+'</div>':'<div class="av">AI</div><div>'+html+'</div>';
+  b.appendChild(r);scrollBot(bodyId);
+}
+function typing(bodyId,cb,ms){
+  const b=document.getElementById(bodyId);if(!b)return;
+  const r=document.createElement('div');r.className='msg-row';
+  r.innerHTML='<div class="av">AI</div><div class="bub ai"><span class="tdot"></span><span class="tdot"></span><span class="tdot"></span></div>';
+  b.appendChild(r);scrollBot(bodyId);
+  setTimeout(()=>{try{b.removeChild(r);}catch(e){}cb();scrollBot(bodyId);},ms||1200);
+}
+
+/* ─── HOME ROUTING ─── */
+function classify(q){
+  q=q.toLowerCase();
+  if(q.includes('nấu')||q.includes('phở')||q.includes('phim')||q.includes('du lịch')||q.includes('ngon')) return 'refuse';
+  if(q.includes('đặt lịch')||q.includes('khám đâu')||q.includes('nên khám')||q.includes('khoa')||q.includes('đau ngực')) return 'book';
+  if(q.includes('quy trình')||q.includes('nhập viện')||q.includes('viện phí')||q.includes('bảo hiểm')) return 'proc';
+  if(q.includes('chóng mặt')||q.includes('dữ dội')||q.includes('không rõ')) return 'low';
+  return 'high';
+}
+function routeHome(q){document.getElementById('home-inp').value=q;homeChat();}
+function homeChat(){
+  const inp=document.getElementById('home-inp');const q=inp.value.trim();if(!q)return;inp.value='';
+  addMsg('home-body','user',q);
+  const body=document.getElementById('home-body');
+  const r=document.createElement('div');r.className='msg-row';
+  r.innerHTML='<div class="av">AI</div><div class="bub ai" style="font-size:12px;">⚙ <strong>AI Reasoning</strong> — phân loại intent...</div>';
+  body.appendChild(r);
+  const intent=classify(q);
+  const map={refuse:'⛔ Ngoài domain y tế',book:'📅 Hỗ trợ đặt lịch',proc:'📋 Tư vấn quy trình',low:'🔬 Tư vấn thông tin',high:'🔬 Tư vấn thông tin'};
+  const col={refuse:'#cc0000',book:'#1565C0',proc:'#6A1B9A',low:'#009B8D',high:'#009B8D'};
+  setTimeout(()=>{
+    try{body.removeChild(r);}catch(e){}
+    const nb=document.createElement('div');nb.className='msg-row';
+    nb.innerHTML='<div class="av">AI</div><div class="bub ai" style="font-size:12px;"><span style="background:'+col[intent]+'20;color:'+col[intent]+';border-radius:6px;padding:2px 8px;font-weight:700;font-size:11px;">'+map[intent]+'</span><br><span style="color:#888;font-size:11px;">Chuyển sang nhánh...</span></div>';
+    body.appendChild(nb);scrollBot('home-body');
+    setTimeout(()=>{
+      if(intent==='book'){go('s-book');initBook(q);}
+      else if(intent==='proc'){go('s-proc');initProc(q);}
+      else{go('s-info');initInfo(q,intent);}
+    },600);
+  },900);
+}
+
+/* ══════════════════════════════════════════
+   NHÁNH 1 · TƯ VẤN THÔNG TIN — vòng lặp
+   ══════════════════════════════════════════ */
+var infoLoop=0;
+function initInfo(q,hint){
+  var body=document.getElementById('info-body');body.innerHTML='';infoLoop=0;
+  addMsg('info-body','ai','<div class="bub ai"><div class="loop-badge">🔄 Vòng lặp: hỏi tiếp sau mỗi câu trả lời</div><br>Xin chào! Tôi sẽ giải thích kết quả y khoa cho bạn.<br>Bạn đang thắc mắc về vấn đề gì?</div>');
+  if(q){document.getElementById('info-inp').value=q;infoAsk(q,hint);}
+}
+function infoAsk(q,hint){
+  var inp=document.getElementById('info-inp');
+  if(typeof q!=='string'){q=inp.value.trim();if(!q)return;}
+  inp.value='';
+  addMsg('info-body','user',q);
+  var isOut=q.toLowerCase().includes('nấu')||q.toLowerCase().includes('phở')||q.toLowerCase().includes('phim')||q.toLowerCase().includes('du lịch');
+  var isLow=q.toLowerCase().includes('chóng mặt')||q.toLowerCase().includes('dữ dội')||q.toLowerCase().includes('không rõ')||hint==='low';
+  infoLoop++;
+  var iterTag=infoLoop>1?'<div class="loop-badge">🔄 Vòng lặp #'+infoLoop+' — User tiếp tục hỏi</div>':'';
+  typing('info-body',function(){
+    addMsg('info-body','ai','<div style="font-size:10px;color:#009B8D;font-weight:600;margin-bottom:4px;">'+iterTag+'⚙ Bước 3 · Domain Check...</div>'+
+      '<div style="background:#fff;border-radius:10px;padding:8px 10px;font-size:11px;color:#444;margin-top:2px;">'+
+      (isOut?'<span style="color:#cc0000;">✗ Ngoài domain y tế</span>':'<span style="color:#28a745;">✓ Trong domain y tế → RAG truy xuất DB...</span>')+'</div>');
+    setTimeout(function(){
+      if(isOut){
+        addMsg('info-body','ai','<div style="font-size:10px;color:#cc0000;font-weight:600;margin-bottom:4px;">→ 3.1 Từ chối lịch sự</div>'+
+          '<div class="refuse-card"><div style="font-size:13px;font-weight:700;color:#800000;margin-bottom:5px;">⛔ Ngoài phạm vi</div>'+
+          '<div style="font-size:12px;color:#555;line-height:1.6;">Tôi chỉ hỗ trợ câu hỏi <strong>liên quan đến y tế Vinmec</strong>. Bạn muốn hỏi về kết quả xét nghiệm hay quy trình khám không?</div></div>');
+        addSatisfaction();
+      } else {
+        setTimeout(function(){
+          var confHtml=isLow
+            ?'<div style="font-size:10px;color:#d4a017;font-weight:600;margin-bottom:3px;">📊 Confidence Score: 35% — Thấp</div><div class="conf-bar conf-l"></div>'
+            :'<div style="font-size:10px;color:#28a745;font-weight:600;margin-bottom:3px;">📊 Confidence Score: 88% — Cao</div><div class="conf-bar conf-h"></div>';
+          addMsg('info-body','ai','<div style="background:#fff;border-radius:10px;padding:9px 11px;">'+confHtml+'<div style="font-size:11px;color:#666;margin-top:3px;">'+(isLow?'→ 3.2.1 Low → Hiển thị cảnh báo':'→ 3.2.1 High → Giải thích rõ ràng')+'</div></div>');
+          setTimeout(function(){
+            if(isLow){
+              addMsg('info-body','ai',
+                '<div style="font-size:10px;color:#d4a017;font-weight:600;margin-bottom:4px;">⚠️ 3.2.1 Warning — Low confidence</div>'+
+                '<div class="warn-card">'+
+                '<div style="font-size:13px;font-weight:700;color:#7d5f00;margin-bottom:5px;">⚠️ Cần tham khảo ý kiến bác sĩ</div>'+
+                '<div style="font-size:12px;color:#7d5f00;line-height:1.6;">Triệu chứng chóng mặt, đau đầu dữ dội có thể liên quan đến nhiều nguyên nhân phức tạp (huyết áp cao, tiền đình, thần kinh...). AI chưa đủ tự tin để đưa ra kết luận chính xác.<br><br><strong>Khuyến nghị:</strong> Vui lòng gặp bác sĩ để được thăm khám trực tiếp.</div>'+
+                '<div class="src-chip" style="margin-top:8px;">⚠️ Confidence 35% — Tham khảo bác sĩ</div></div>');
+            } else {
+              addMsg('info-body','ai',
+                '<div style="font-size:10px;color:#28a745;font-weight:600;margin-bottom:4px;">✅ 3.2.1 Explain — High confidence</div>'+
+                '<div class="ok-card">'+
+                '<div style="font-size:13px;font-weight:700;color:#155724;margin-bottom:6px;">✅ Giải thích kết quả rõ ràng</div>'+
+                '<div style="font-size:12px;color:#155724;line-height:1.6;">Glucose <strong>6.8 mmol/L</strong> cao hơn ngưỡng bình thường (3.9–6.1 mmol/L).<br><br>• Có thể chưa nhịn ăn đủ 8 tiếng<br>• Cần theo dõi nguy cơ tiền tiểu đường<br><br><span style="font-size:11px;">⚠ AI chỉ mang tính tham khảo.</span></div>'+
+                '<div class="src-chip" style="margin-top:8px;">📄 Vinmec Lab Reference Values 2024</div></div>');
+            }
+            addSatisfaction();
+          },600);
+        },600);
+      }
+    },700);
+  });
+}
+function addSatisfaction(){
+  var body=document.getElementById('info-body');
+  var r=document.createElement('div');r.className='msg-row';
+  r.innerHTML='<div class="av">AI</div><div>'+
+    '<div class="bub ai" style="margin-bottom:6px;font-size:12px;">→ Bước 3.3: Bạn có hài lòng hoặc muốn tiếp tục hỏi không?</div>'+
+    '<div class="action-row">'+
+    '<button class="abtn cont" onclick="continueInfo()">🔄 Tiếp tục hỏi</button>'+
+    '<button class="abtn yes" onclick="endInfo()">✅ Hài lòng, kết thúc</button>'+
+    '</div></div>';
+  body.appendChild(r);scrollBot('info-body');
+}
+function continueInfo(){
+  var body=document.getElementById('info-body');
+  var r=document.createElement('div');r.className='msg-row';
+  r.innerHTML='<div class="av">AI</div><div class="bub ai"><div class="loop-badge">🔄 Quay lại bước 3 · Domain Check</div><br>Bạn muốn hỏi thêm điều gì? Tôi sẵn sàng giải thích.</div>';
+  body.appendChild(r);scrollBot('info-body');
+  document.getElementById('info-inp').focus();
+}
+function endInfo(){
+  addMsg('info-body','user','Cảm ơn, tôi đã hiểu 👍');
+  typing('info-body',function(){
+    addMsg('info-body','ai','<div class="bub ai">Chúc bạn sức khỏe! Nếu còn câu hỏi đừng ngại hỏi lại nhé 😊</div>');
+    setTimeout(function(){
+      document.getElementById('end-icon').textContent='✅';
+      document.getElementById('end-sub').textContent='Tư vấn thông tin · Phiên kết thúc';
+      document.getElementById('end-content').innerHTML='<div style="font-size:12px;color:#555;line-height:1.7;"><strong>Kết quả:</strong> Đã tư vấn xong · User hài lòng ✅<br><strong>Vòng lặp:</strong> '+infoLoop+' lần hỏi<br><strong>Flow:</strong> Input → Reasoning → Domain Check → RAG → Confidence → Explain/Warning → Satisfaction → End</div>';
+      go('s-end');
+    },800);
+  });
+}
+
+/* ══════════════════════════════════════════
+   NHÁNH 2 · ĐẶT LỊCH — full flow
+   ══════════════════════════════════════════ */
+var bStep=0,bSymptom='',bSpec='',bAddress='',bClinic='';
+function setBStep(n){
+  var ids=['b1','b2','b3','b4','b5'];
+  var lines=['bln1','bln2','bln3','bln4'];
+  var labels=['bl1','bl2','bl3','bl4','bl5'];
+  ids.forEach(function(id,i){
+    var el=document.getElementById(id);if(!el)return;
+    el.className='sdot-b'+(i+1<n?' done':i+1===n?' cur':'');
+  });
+  lines.forEach(function(id,i){
+    var el=document.getElementById(id);if(el)el.className='sl-b'+(i+1<n?' done':'');
+  });
+  labels.forEach(function(id,i){
+    var el=document.getElementById(id);if(el)el.className='slab-b'+(i+1<=n?' a':'');
+  });
+}
+function initBook(q){
+  document.getElementById('book-body').innerHTML='';bStep=0;bSymptom='';bSpec='';bAddress='';bClinic='';
+  document.getElementById('book-ibar').style.display='none';setBStep(1);
+  addMsg('book-body','ai','<div class="bub ai">→ Bước 4.1: Bạn đang có triệu chứng gì?<br>Mô tả để tôi phân tích và tư vấn chuyên khoa phù hợp.</div>');
+  showBookInput('Mô tả triệu chứng...',bookStep1);
+  if(q&&typeof q==='string'&&q.length>3){document.getElementById('book-inp').value=q.includes('ngực')?'Tôi bị đau ngực, khó thở':q;}
+}
+function showBookInput(ph,fn){
+  var ibar=document.getElementById('book-ibar');
+  var inp=document.getElementById('book-inp');
+  var btn=document.getElementById('book-ibtn');
+  inp.placeholder=ph;ibar.style.display='flex';inp.value='';
+  setTimeout(function(){inp.focus();},100);
+  btn.onclick=fn;inp.onkeydown=function(e){if(e.key==='Enter')fn();};
+}
+function bookStep1(){
+  var inp=document.getElementById('book-inp');var q=inp.value.trim();if(!q)return;
+  bSymptom=q;inp.value='';document.getElementById('book-ibar').style.display='none';
+  addMsg('book-body','user',q);
+  typing('book-body',function(){
+    setBStep(1);
+    addMsg('book-body','ai',
+      '<div style="font-size:10px;color:#009B8D;font-weight:600;margin-bottom:5px;">⚙ 4.1 Phân tích triệu chứng → Gợi ý chuyên khoa</div>'+
+      '<div class="bub ai" style="margin-bottom:7px;">Dựa trên triệu chứng, tôi gợi ý chuyên khoa:</div>'+
+      '<div style="display:flex;flex-direction:column;gap:7px;">'+
+      '<div class="clinic-card" id="spec-a" onclick="selectSpec(\'Nội tim mạch\')"><div class="clinic-icon">❤️</div><div><div style="font-size:13px;font-weight:600;color:#111;">Nội tim mạch</div><div style="font-size:11px;color:#888;">Đau ngực, khó thở, hồi hộp</div></div></div>'+
+      '<div class="clinic-card" id="spec-b" onclick="selectSpec(\'Hô hấp\')"><div class="clinic-icon">🫁</div><div><div style="font-size:13px;font-weight:600;color:#111;">Hô hấp</div><div style="font-size:11px;color:#888;">Khó thở, ho kéo dài</div></div></div>'+
+      '<div class="clinic-card" id="spec-c" onclick="selectSpec(\'Nội tổng quát\')"><div class="clinic-icon">🩺</div><div><div style="font-size:13px;font-weight:600;color:#111;">Nội tổng quát</div><div style="font-size:11px;color:#888;">Khám sàng lọc ban đầu</div></div></div>'+
+      '</div>'+
+      '<div style="margin-top:8px;"><button class="abtn no" onclick="retrySymptom()">↺ Sai, phân tích lại</button></div>'
+    );
+  });
+}
+function selectSpec(spec){
+  document.querySelectorAll('.clinic-card').forEach(function(c){c.classList.remove('chosen');});
+  var map={'Nội tim mạch':'spec-a','Hô hấp':'spec-b','Nội tổng quát':'spec-c'};
+  var el=document.getElementById(map[spec]);if(el)el.classList.add('chosen');
+  bSpec=spec;
+  addMsg('book-body','user','✅ Đúng, tôi muốn khám '+spec);
+  setBStep(2);
+  typing('book-body',function(){
+    addMsg('book-body','ai',
+      '<div style="font-size:10px;color:#009B8D;font-weight:600;margin-bottom:5px;">→ User xác nhận đúng → Hỏi địa chỉ</div>'+
+      '<div class="bub ai">Để tìm phòng khám Vinmec gần nhất, bạn đang ở khu vực nào?</div>'
+    );
+    showBookInput('VD: Đống Đa, Hà Nội',bookStep3);
+  });
+}
+function retrySymptom(){
+  addMsg('book-body','user','Sai, phân tích lại đi');
+  typing('book-body',function(){
+    addMsg('book-body','ai','<div class="bub ai">→ Quay lại phân tích triệu chứng<br>Bạn mô tả lại triệu chứng cụ thể hơn được không?</div>');
+    showBookInput('Mô tả triệu chứng cụ thể hơn...',bookStep1);
+  });
+}
+function bookStep3(){
+  var inp=document.getElementById('book-inp');var addr=inp.value.trim();if(!addr)return;
+  bAddress=addr;inp.value='';document.getElementById('book-ibar').style.display='none';
+  addMsg('book-body','user',addr);setBStep(3);
+  typing('book-body',function(){
+    addMsg('book-body','ai',
+      '<div style="font-size:10px;color:#009B8D;font-weight:600;margin-bottom:5px;">⚙ 4.2 Truy xuất DB phòng khám gần "'+addr+'"...</div>'+
+      '<div style="background:#fff;border-radius:10px;padding:9px 11px;font-size:12px;color:#444;margin-top:2px;">'+
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;"><div style="width:7px;height:7px;border-radius:50%;background:#009B8D;"></div>Đang tìm kiếm phòng khám gần nhất...</div>'+
+      '<div style="height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden;"><div style="height:100%;background:#009B8D;border-radius:3px;animation:prog 1.2s ease forwards;width:0;"></div></div></div>'
+    );
+    setTimeout(function(){
+      var misread=addr.toLowerCase().includes('đống đa')?'Đống Đa, Hà Nội':'Khu vực '+addr.split(',')[0].trim();
+      addMsg('book-body','ai',
+        '<div style="font-size:10px;color:#009B8D;font-weight:600;margin-bottom:5px;">→ 4.2.1 Xác nhận AI đọc đúng địa chỉ?</div>'+
+        '<div class="addr-card">'+
+        '<div style="font-size:12px;color:#00695C;margin-bottom:8px;">AI đọc địa chỉ: <strong>'+misread+'</strong></div>'+
+        '<div style="font-size:13px;font-weight:700;color:#009B8D;margin-bottom:8px;">📍 Phòng khám gần nhất:</div>'+
+        '<div class="clinic-card chosen" style="cursor:default;"><div class="clinic-icon">🏥</div><div><div style="font-size:13px;font-weight:600;color:#111;">Vinmec Times City</div><div style="font-size:11px;color:#888;">458 Minh Khai, Hai Bà Trưng · 1.2 km</div></div></div>'+
+        '<div class="clinic-card" style="cursor:default;"><div class="clinic-icon">🏥</div><div><div style="font-size:13px;font-weight:600;color:#111;">Vinmec Royal City</div><div style="font-size:11px;color:#888;">72A Nguyễn Trãi, Thanh Xuân · 3.1 km</div></div></div>'+
+        '<div style="margin-top:10px;font-size:12px;color:#555;">AI đọc địa chỉ <strong>"'+misread+'"</strong> có đúng không?</div>'+
+        '<div class="action-row" style="margin-top:7px;">'+
+        '<button class="abtn yes" onclick="confirmAddress()">✅ Đúng rồi</button>'+
+        '<button class="abtn no" onclick="correctAddress()">❌ Sai, sửa lại</button>'+
+        '</div></div>'
+      );
+    },1400);
+  });
+}
+function correctAddress(){
+  addMsg('book-body','user','Sai, tôi muốn sửa lại địa chỉ');
+  typing('book-body',function(){
+    addMsg('book-body','ai',
+      '<div style="font-size:10px;color:#cc0000;font-weight:600;margin-bottom:5px;">→ 4.2.2 User sửa lại thông tin → Quay lại 4.2</div>'+
+      '<div class="bub ai">Vui lòng nhập lại địa chỉ chính xác hơn:</div>'
+    );
+    showBookInput('Nhập lại địa chỉ...',bookStep3);
+  });
+}
+function confirmAddress(){
+  addMsg('book-body','user','Đúng rồi, địa chỉ chính xác');
+  setBStep(4);
+  typing('book-body',function(){
+    addMsg('book-body','ai',
+      '<div style="font-size:10px;color:#009B8D;font-weight:600;margin-bottom:5px;">→ 4.3 Xác nhận thông tin đặt lịch</div>'+
+      '<div style="background:#E6F7F5;border-radius:14px;padding:13px;margin-top:4px;">'+
+      '<div style="font-size:13px;font-weight:700;color:#009B8D;margin-bottom:8px;">Xác nhận lịch khám</div>'+
+      '<div style="font-size:12px;display:flex;flex-direction:column;gap:5px;">'+
+      '<div style="display:flex;justify-content:space-between;"><span style="color:#666;">Chuyên khoa</span><strong style="color:#009B8D;">'+bSpec+'</strong></div>'+
+      '<div style="display:flex;justify-content:space-between;"><span style="color:#666;">Phòng khám</span><strong style="color:#009B8D;">Vinmec Times City</strong></div>'+
+      '<div style="display:flex;justify-content:space-between;"><span style="color:#666;">Ngày</span><strong style="color:#009B8D;">19/04/2025</strong></div>'+
+      '<div style="display:flex;justify-content:space-between;"><span style="color:#666;">Giờ</span><strong style="color:#009B8D;">09:00</strong></div>'+
+      '<div style="display:flex;justify-content:space-between;"><span style="color:#666;">Địa chỉ</span><strong style="color:#009B8D;">'+bAddress+'</strong></div>'+
+      '</div></div>'+
+      '<div class="action-row" style="margin-top:10px;"><button class="abtn yes" onclick="confirmBook()" style="flex:1;text-align:center;">✅ Xác nhận đặt lịch</button></div>'
+    );
+  });
+}
+function confirmBook(){
+  addMsg('book-body','user','Xác nhận, đặt lịch đi!');setBStep(5);
+  typing('book-body',function(){
+    addMsg('book-body','ai',
+      '<div style="font-size:10px;color:#28a745;font-weight:600;margin-bottom:5px;">✅ AI đặt lịch vào hệ thống Vinmec...</div>'+
+      '<div class="ok-card">'+
+      '<div style="font-size:14px;font-weight:700;color:#155724;margin-bottom:5px;">✅ Đặt lịch thành công!</div>'+
+      '<div style="font-size:12px;color:#155724;line-height:1.6;">Lịch hẹn của bạn đã được ghi nhận.<br>SMS xác nhận sẽ gửi về số điện thoại trong vài phút.</div>'+
+      '<div style="margin-top:8px;background:rgba(255,255,255,.6);border-radius:8px;padding:8px 10px;font-size:11px;color:#155724;">📱 Mã lịch hẹn: <strong>VM-20250419-0041</strong></div></div>'
+    );
+    setTimeout(function(){
+      document.getElementById('end-icon').textContent='📅';
+      document.getElementById('end-sub').textContent='Đặt lịch thành công';
+      document.getElementById('end-content').innerHTML='<div style="font-size:12px;color:#555;line-height:1.7;"><strong>Flow đã đi qua:</strong><br>Triệu chứng → User xác nhận → Địa chỉ → Phòng khám → Xác nhận địa chỉ → Confirm → Đặt lịch ✅<br><br><strong>Phòng khám:</strong> Vinmec Times City<br><strong>Mã lịch hẹn:</strong> VM-20250419-0041</div>';
+      setTimeout(function(){go('s-end');},600);
+    },1200);
+  });
+}
+
+/* ══════════════════════════════════════════
+   NHÁNH 3 · QUY TRÌNH
+   ══════════════════════════════════════════ */
+var procDB={
+  'nhập viện':{title:'Quy trình nhập viện',steps:['Đến quầy tiếp nhận Tầng 1 — xuất trình CCCD + thẻ BHYT','Điền phiếu đăng ký và nhận số thứ tự','Khám sàng lọc: y tá đo huyết áp, nhiệt độ','Thanh toán tạm ứng viện phí tại quầy Thu ngân','Nhận phòng — bàn giao với điều dưỡng phụ trách']},
+  'viện phí':{title:'Thông tin viện phí',steps:['Khám nội khoa: 300.000–500.000 VNĐ/lần','Xét nghiệm máu cơ bản: 150.000–400.000 VNĐ','Siêu âm tổng quát: 250.000–600.000 VNĐ','Thanh toán: tiền mặt, thẻ ngân hàng, ví điện tử','Hóa đơn VAT xuất tại quầy Thu ngân Tầng 1']},
+  'bảo hiểm':{title:'Thanh toán bảo hiểm',steps:['Mang thẻ BHYT còn hiệu lực + CCCD gốc','Xuất trình tại quầy Tiếp nhận khi đến','BHYT thanh toán theo đúng tuyến đăng ký','Phần BHYT không chi trả: bệnh nhân tự thanh toán','Hoàn trả BHYT: nộp hồ sơ tại BHXH trong 90 ngày']}
+};
+function initProc(q){
+  document.getElementById('proc-body').innerHTML='';
+  addMsg('proc-body','ai',
+    '<div style="font-size:10px;color:#009B8D;font-weight:600;margin-bottom:5px;">⚙ Bước 5 · Truy xuất DB quy trình Vinmec</div>'+
+    '<div class="bub ai">Tôi có thể hướng dẫn quy trình tại Vinmec:<br><br>'+
+    '<div style="display:flex;flex-direction:column;gap:6px;margin-top:6px;">'+
+    '<div onclick="showProc(\'nhập viện\')" style="background:#f5f5f5;border-radius:10px;padding:9px 12px;font-size:12px;cursor:pointer;display:flex;gap:8px;align-items:center;">🏥 <span>Quy trình nhập viện</span></div>'+
+    '<div onclick="showProc(\'viện phí\')" style="background:#f5f5f5;border-radius:10px;padding:9px 12px;font-size:12px;cursor:pointer;display:flex;gap:8px;align-items:center;">💰 <span>Thông tin viện phí</span></div>'+
+    '<div onclick="showProc(\'bảo hiểm\')" style="background:#f5f5f5;border-radius:10px;padding:9px 12px;font-size:12px;cursor:pointer;display:flex;gap:8px;align-items:center;">📄 <span>Thanh toán bảo hiểm</span></div>'+
+    '</div></div>'
+  );
+  if(q&&typeof q==='string'){document.getElementById('proc-inp').value=q;setTimeout(procAsk,200);}
+}
+function showProc(key){
+  var d=procDB[key];
+  var steps=d.steps.map(function(s,i){return '<div class="step-row"><div class="step-num">'+(i+1)+'</div><div class="step-txt">'+s+'</div></div>';}).join('');
+  addMsg('proc-body','user',key.charAt(0).toUpperCase()+key.slice(1));
+  typing('proc-body',function(){
+    addMsg('proc-body','ai',
+      '<div style="font-size:10px;color:#009B8D;font-weight:600;margin-bottom:4px;">⚙ 5.1 Truy xuất DB → 5.2 Hướng dẫn cụ thể</div>'+
+      '<div class="bub ai" style="margin-bottom:6px;"><strong>'+d.title+'</strong></div>'+
+      '<div class="step-list">'+steps+'</div>'+
+      '<div class="src-chip" style="margin-top:7px;">📄 Vinmec Process DB v2.4</div>'+
+      '<div style="margin-top:8px;"><button onclick="endProc()" style="width:100%;padding:9px;border-radius:10px;background:#009B8D;color:#fff;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:inherit;">✓ Đã hiểu — Kết thúc phiên</button></div>'
+    );
+  });
+}
+function procAsk(){
+  var inp=document.getElementById('proc-inp');var q=inp.value.trim();if(!q)return;inp.value='';
+  addMsg('proc-body','user',q);
+  var key=Object.keys(procDB).find(function(k){return q.toLowerCase().includes(k);});
+  if(key){showProc(key);return;}
+  typing('proc-body',function(){addMsg('proc-body','ai','<div class="bub ai">Bạn có thể hỏi về <strong>nhập viện</strong>, <strong>viện phí</strong>, hoặc <strong>bảo hiểm</strong>.</div>');});
+}
+function endProc(){
+  document.getElementById('end-icon').textContent='📋';
+  document.getElementById('end-sub').textContent='Tư vấn quy trình hoàn tất';
+  document.getElementById('end-content').innerHTML='<div style="font-size:12px;color:#555;line-height:1.7;"><strong>Flow:</strong> Input → Reasoning → 5.1 Truy xuất DB Vinmec → 5.2 Hướng dẫn cụ thể → End ✅</div>';
+  go('s-end');
+}
+
+/* ─── KEYBOARD ─── */
+document.getElementById('home-inp').addEventListener('keydown',function(e){if(e.key==='Enter')homeChat();});
+document.getElementById('info-inp').addEventListener('keydown',function(e){if(e.key==='Enter')infoAsk();});
+document.getElementById('proc-inp').addEventListener('keydown',function(e){if(e.key==='Enter')procAsk();});
+</script>
+</body>
+</html>
