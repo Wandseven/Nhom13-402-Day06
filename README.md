@@ -6,3 +6,4 @@ Nhom13-402-Day06/
 ├── prototype-readme.md            ← Mô tả prototype + link + phân công
 └── demo-slides.pdf                ← Poster hoặc slides dùng khi present
 ```
+
