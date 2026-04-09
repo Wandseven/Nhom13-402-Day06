@@ -4,17 +4,17 @@
 Chatbot tư vấn bệnh nhân, trả lời giải đáp các thông số y khoa, hỗ trợ bệnh nhân đặt lịch khám theo khu vực và tư vấn giải đáp các quy trình phức tạp như nhập viện, bảo hiểm,...
 
 ## Level: Working prototype
-- UI build bằng Claude Artifacts (HTML/CSS/JS)
-- 1 demo chính chạy thật với Gemini API: nhập thông tin/yêu cầu -> tư vấn/đặt lịch/giải đáp
+- UI build bằng Claude sonnet 4.6
+- 1 demo chính chạy thật với OpenAI API: nhập thông tin/yêu cầu -> tư vấn/đặt lịch/giải đáp
 
 ## Links
 - Prototype:
 - Video demo (backup): https://drive.google.com/file/d/1aJbyE7A1mWFVYHVGiz8SexhHunW-jqAR/view?usp=drive_link
 
 ## Tools
-- UI: Claude Artifacts
-- AI: Google Gemini 2.0 Flash (via Google AI Studio)
-- Prompt: system prompt + few-shot examples cho 10 triệu chứng phổ biến
+- UI: Claude sonnet 4.6 gen từ workflow + screenshot app Vinmec
+- AI: Call API model GPT-4o
+- Prompt: system prompt + one-shot example
 
 ## Phân công
 | Thành viên | Phần | Output |
