@@ -1,4 +1,4 @@
-**Nhóm:** ___
+**Nhóm:** 13
 **Track:** ☐ VinFast · ☑ Vinmec · ☐ VinUni-VinSchool · ☐ XanhSM · ☐ Open
 
 **Problem statement (1 câu):** 
